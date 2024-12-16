@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package communication;
+
+message Configuration {
+    int32 fault_tolerance_level = 1;
+    string method = 2;
+}
