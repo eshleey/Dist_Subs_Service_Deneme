@@ -1,99 +1,94 @@
 package Clients;
 
+import communication.SubscriberOuterClass.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import communication.MessageOuterClass.Message;
-import communication.SubscriberOuterClass;
-import communication.SubscriberOuterClass.Subscriber;
+import java.util.Arrays;
 
 public class Client {
-    private static final String HOST = "localhost";
-    private static final int PORT = 7001;
+
+    private static final String SERVER_HOST = "localhost"; // Sunucu adresi
+    private static final int SERVER_PORT = 7001; // Server1 portu
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket(HOST, PORT);
-             InputStream input = socket.getInputStream();
-             OutputStream output = socket.getOutputStream()) {
+        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT)) {
+            System.out.println("Connected to server: " + SERVER_HOST + ":" + SERVER_PORT);
 
-            // Sunucuya STRT mesajı gönder
-            sendStartMessage(output);
-            Message responseMessage = receiveMessage(input);
+            // Stream oluştur
+            OutputStream output = socket.getOutputStream();
+            InputStream input = socket.getInputStream();
 
-            // Sunucudan gelen yanıt kontrolü
-            if ("YEP".equals(responseMessage.getResponse())) {
-                System.out.println("Connection established successfully.");
-            } else {
-                System.out.println("Failed to establish connection.");
-                return;
-            }
+            // Abone ekleme (SUBS) isteği gönder
+            Subscriber subscriber = createSubscriberForSub();
+            sendSubscriberMessage(output, subscriber);
+            System.out.println("Subscriber SUBS message sent.");
 
-            // Abone olma talebi gönder (SUBS)
-            sendSubscribeRequest(output);
-            responseMessage = receiveMessage(input);
+            // Sunucudan cevap oku
+            System.out.println("Server response: " + readServerResponse(input));
 
-            if ("NOPE".equals(responseMessage.getResponse())) {
-                System.out.println("Failed to subscribe.");
-            } else {
-                System.out.println("Successfully subscribed.");
-            }
+            // Abone silme (DEL) isteği gönder
+            Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
+            sendSubscriberMessage(output, delSubscriber);
+            System.out.println("Subscriber DEL message sent.");
 
-            // Abonelikten çıkma talebi gönder (DEL)
-            sendUnsubscribeRequest(output);
-            responseMessage = receiveMessage(input);
+            // Sunucudan cevap oku
+            System.out.println("Server response: " + readServerResponse(input));
 
-            if ("NOPE".equals(responseMessage.getResponse())) {
-                System.out.println("Failed to unsubscribe.");
-            } else {
-                System.out.println("Successfully unsubscribed.");
-            }
+            // Stream ve bağlantıyı kapat
+            output.close();
+            socket.close();
+            System.out.println("Connection closed.");
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error in client: " + e.getMessage());
         }
     }
 
-    private static void sendStartMessage(OutputStream output) throws IOException {
-        Message startMessage = Message.newBuilder()
-                .setDemand("STRT")
-                .build();
-        output.write(startMessage.toByteArray());
-        output.flush();
-    }
-
-    private static void sendSubscribeRequest(OutputStream output) throws IOException {
-        Subscriber subscriber = Subscriber.newBuilder()
-                .setDemand(SubscriberOuterClass.DemandType.SUBS)
-                .setID(12)
+    // SUBS isteği için Subscriber nesnesi oluşturur
+    private static Subscriber createSubscriberForSub() {
+        return Subscriber.newBuilder()
+                .setDemand(DemandType.SUBS) // Abone ekleme
+                .setID(12) // Benzersiz ID
                 .setNameSurname("Jane DOE")
-                .setStartDate(1729802522)
-                .setLastAccessed(1729806522)
-                .addInterests("sports")
-                .addInterests("lifestyle")
-                .addInterests("cooking")
-                .addInterests("psychology")
-                .setIsOnline(true)
+                .setStartDate(System.currentTimeMillis())
+                .setLastAccessed(System.currentTimeMillis())
+                .addAllInterests(Arrays.asList("sports", "lifestyle", "cooking", "psychology"))
+                .setIsOnline(true) // Çevrimiçi durumu
                 .build();
-
-        byte[] subscriberBytes = subscriber.toByteArray();
-        output.write(subscriberBytes);
-        output.flush();
     }
 
-    private static void sendUnsubscribeRequest(OutputStream output) throws IOException {
-        Subscriber subscriber = Subscriber.newBuilder()
-                .setDemand(SubscriberOuterClass.DemandType.DEL)
-                .setID(12)
-                .build(); // ID ile birlikte abonelikten çıkma talebi
-
-        byte[] subscriberBytes = subscriber.toByteArray();
-        output.write(subscriberBytes);
-        output.flush();
+    // DEL isteği için Subscriber nesnesi oluşturur
+    private static Subscriber createSubscriberForDel(int id) {
+        return Subscriber.newBuilder()
+                .setDemand(DemandType.DEL) // Abonelikten çıkma isteği
+                .setID(id) // ID üzerinden silme işlemi yapılacak
+                .build();
     }
 
-    private static Message receiveMessage(InputStream input) throws IOException {
-        byte[] messageBytes = input.readAllBytes();
-        return Message.parseFrom(messageBytes);
+    // Subscriber nesnesini sunucuya gönderen fonksiyon
+    private static void sendSubscriberMessage(OutputStream output, Subscriber subscriber) {
+        try {
+            byte[] data = subscriber.toByteArray(); // Protobuf mesajını byte[]'e çevir
+            output.write(data); // Veriyi sunucuya gönder
+            output.flush();
+        } catch (IOException e) {
+            System.err.println("Failed to send message: " + e.getMessage());
+        }
+    }
+
+    // Sunucudan gelen cevabı okuyup string olarak döndürür
+    private static String readServerResponse(InputStream input) {
+        try {
+            byte[] buffer = new byte[1024];
+            int bytesRead = input.read(buffer);
+            if (bytesRead > 0) {
+                return new String(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to read server response: " + e.getMessage());
+        }
+        return "No response from server.";
     }
 }
