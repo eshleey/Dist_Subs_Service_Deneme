@@ -22,16 +22,16 @@ public class Client {
 
             // Abone ekleme (SUBS) isteği gönder
             Subscriber subscriber = createSubscriberForSub();
-            /*sendSubscriberMessage(output, subscriber);
-            System.out.println("Subscriber SUBS message sent.");*/
+            sendSubscriberMessage(output, subscriber);
+            System.out.println("Subscriber SUBS message sent.");
 
             // Bekleme ekle, sorun varsa burada zaman kazanabiliriz
             Thread.sleep(100);
 
             // Abone silme (DEL) isteği gönder
-            Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
-            sendSubscriberMessage(output, delSubscriber);
-            System.out.println("Subscriber DEL message sent.");
+            //Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
+            //sendSubscriberMessage(output, delSubscriber);
+            //System.out.println("Subscriber DEL message sent.");
 
             //startClients(args);
 
@@ -74,15 +74,6 @@ public class Client {
             output.flush();
         } catch (IOException e) {
             System.err.println("Failed to send message: " + e.getMessage());
-        }
-    }
-
-    private static void startClients (String[] args) {
-        try {
-            Client2.main(args);
-        }
-        catch (Exception e) {
-            System.err.println("Start clients function error: " + e);
         }
     }
 }

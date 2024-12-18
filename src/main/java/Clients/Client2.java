@@ -9,7 +9,7 @@ import java.util.Arrays;
 public class Client2 {
 
     private static final String SERVER_HOST = "localhost"; // Sunucu adresi
-    private static final int SERVER_PORT = 7001; // Server1 portu
+    private static final int SERVER_PORT = 7002; // Server1 portu
 
     public static void main(String[] args) {
         try {
@@ -29,9 +29,9 @@ public class Client2 {
             Thread.sleep(100);
 
             // Abone silme (DEL) isteği gönder
-            /*Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
-            sendSubscriberMessage(output, delSubscriber);
-            System.out.println("Subscriber DEL message sent.");*/
+            //Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
+            //sendSubscriberMessage(output, delSubscriber);
+            //System.out.println("Subscriber DEL message sent.");
 
             //startClients(args);
 
@@ -57,8 +57,7 @@ public class Client2 {
                 .setIsOnline(true) // Çevrimiçi durumu
                 .build();
     }
-
-    // DEL isteği için Subscriber nesnesi oluşturur
+    //DEL isteği için Subscriber nesnesi oluşturur
     private static Subscriber createSubscriberForDel(int id) {
         return Subscriber.newBuilder()
                 .setDemand(DemandType.DEL) // Abonelikten çıkma isteği
@@ -74,15 +73,6 @@ public class Client2 {
             output.flush();
         } catch (IOException e) {
             System.err.println("Failed to send message: " + e.getMessage());
-        }
-    }
-
-    private static void startClients (String[] args) {
-        try {
-            Client3.main(args);
-        }
-        catch (Exception e) {
-            System.err.println("Start clients function error: " + e);
         }
     }
 }
