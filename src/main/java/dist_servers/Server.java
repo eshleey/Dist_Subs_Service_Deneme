@@ -1,8 +1,6 @@
 package dist_servers;
 
 import communication.SubscriberOuterClass.Subscriber;
-import communication.MessageOuterClass.Message;
-import communication.CapacityOuterClass.Capacity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,35 +8,37 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
-    private static final int PORT = 7001;
+    private static final int CLIENT_PORT = 7001; // Client bağlantıları için port
+    private static final int SERVER2_PORT = 7002; // Server2 ile bağlantı için port
+    private static final int SERVER3_PORT = 7003; // Server3 ile bağlantı için port
     private static final String HOST = "localhost";
-    private static final int SERVER2_PORT = 7002;
-    private static final int SERVER3_PORT = 7003;
-    private static final int THREAD_POOL_SIZE = 10; // Thread pool size for handling client connections
+    private static final int THREAD_POOL_SIZE = 10; // Thread havuz boyutu
 
     private static final ConcurrentMap<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Integer, Boolean> idSet = new ConcurrentHashMap<>();
     private static final AtomicInteger capacity = new AtomicInteger(1000);
 
     public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(PORT);
+        try (ServerSocket clientServerSocket = new ServerSocket(CLIENT_PORT);
              ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE)) {
-            System.out.println("Server listening on port: " + PORT);
+            System.out.println("Server listening on port: " + CLIENT_PORT);
 
-            // Start server thread
-            new Thread(() -> startServer(executorService, serverSocket)).start();
+            // Client bağlantıları için server başlat
+            new Thread(() -> startClientServer(executorService, clientServerSocket)).start();
 
-            // Start client threads to connect to other servers
+            // Diğer server'lara bağlan
             new Thread(() -> connectToServer(SERVER2_PORT, "Server2")).start();
             new Thread(() -> connectToServer(SERVER3_PORT, "Server3")).start();
 
             while (true) {
                 try {
-                    Socket clientSocket = serverSocket.accept();
-                    System.out.println("Connection established: " + clientSocket.getRemoteSocketAddress());
+                    // Client bağlantılarını kabul et
+                    Socket clientSocket = clientServerSocket.accept();
+                    System.out.println("Client connected: " + clientSocket.getRemoteSocketAddress());
                     executorService.submit(() -> handleClient(clientSocket));
-                    //startServers(args);
                 } catch (IOException e) {
                     System.err.println("Connection error: " + e.getMessage());
                     break;
@@ -49,55 +49,32 @@ public class Server {
         }
     }
 
-    private static void startServer(ExecutorService executorService, ServerSocket serverSocket) {
+    private static void startClientServer(ExecutorService executorService, ServerSocket clientServerSocket) {
         while (true) {
             try {
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("Connection established: " + clientSocket.getRemoteSocketAddress());
-                executorService.submit(() -> handleClientToServer(clientSocket));
+                // Client bağlantısını kabul et
+                Socket clientSocket = clientServerSocket.accept();
+                System.out.println("Client connected: " + clientSocket.getRemoteSocketAddress());
+                executorService.submit(() -> handleClient(clientSocket));
             } catch (IOException e) {
                 System.out.println("Connection error: " + e.getMessage());
-                e.printStackTrace();
+                System.err.println();
             }
-        }
-    }
-
-    private static void handleClientToServer(Socket clientSocket) {
-        try (InputStream input = clientSocket.getInputStream();
-             OutputStream output = clientSocket.getOutputStream()) {
-
-            byte[] messageBytes = input.readAllBytes();
-            Message message = Message.parseFrom(messageBytes);
-
-            if ("CPCTY".equals(message.getDemand())) {
-                Capacity capacity = Capacity.newBuilder()
-                        .setServer1Status(1000)
-                        .setTimestamp(System.currentTimeMillis() / 1000)
-                        .build();
-
-                output.write(capacity.toByteArray());
-                output.flush();
-            } else {
-                System.out.println("Unknown demand type: " + message.getDemand());
-            }
-        } catch (IOException e) {
-            System.out.println("Client handling error: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
     private static void connectToServer(int port, String serverName) {
         while (true) {
             try (Socket connection = new Socket(HOST, port)) {
-                System.out.println("Connection established to " + serverName);
-                // Communication logic can be added here
+                System.out.println("Connected to " + serverName);
+                // Server ile iletişim mantığı burada eklenebilir
                 break;
             } catch (IOException e) {
                 System.out.println("Failed to connect to " + serverName + ", retrying...");
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                    System.err.println();
                 }
             }
         }
@@ -128,29 +105,35 @@ public class Server {
         }
     }
 
-    private static String handleIDList(Subscriber subscriber, String option, int id) {
-        switch (option) {
-            case "add" -> {
-                if (SharedResources.idSet.size() < 3) {
-                    if (SharedResources.idSet.putIfAbsent(id, true) == null) {
-                        return addSubscriber(subscriber);
+    public static String handleIDList(Subscriber subscriber, String option, int id) {
+        final ReentrantLock lock = new ReentrantLock();
+        lock.lock();
+        try {
+            switch (option) {
+                case "add" -> {
+                    if (idSet.size() < 3) {
+                        if (idSet.putIfAbsent(id, true) == null) {
+                            return addSubscriber(subscriber);
+                        } else {
+                            return "Already subscribed with ID: " + id;
+                        }
                     } else {
-                        return "Already subscribed with ID: " + id;
+                        return "List is full. Cannot add more ID";
                     }
-                } else {
-                    return "List is full. Cannot add more ID";
+                }
+                case "del" -> {
+                    if (idSet.remove(id) != null) {
+                        return removeSubscriber(subscriber.getID());
+                    } else {
+                        return "ID does not exist: " + id;
+                    }
+                }
+                default -> {
+                    return "Invalid option type.";
                 }
             }
-            case "del" -> {
-                if (SharedResources.idSet.remove(id) != null) {
-                    return removeSubscriber(subscriber.getID());
-                } else {
-                    return "ID does not exist: " + id;
-                }
-            }
-            default -> {
-                return "Invalid option type.";
-            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -173,15 +156,11 @@ public class Server {
         }
     }
 
-    public static class SharedResources {
-        public static final ConcurrentMap<Integer, Boolean> idSet = new ConcurrentHashMap<>();
-    }
-
     private static void handleClient(Socket clientSocket) {
         try (InputStream input = clientSocket.getInputStream();
              OutputStream output = clientSocket.getOutputStream()) {
             while (true) {
-                // İstemciden mesajı al ve işle
+                // Client'ten gelen mesajı al ve işle
                 byte[] subscriberBytes = readFromStream(input);
                 if (subscriberBytes.length == 0) {
                     System.out.println("No data received from client.");
