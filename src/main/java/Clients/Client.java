@@ -2,7 +2,6 @@ package Clients;
 
 import communication.SubscriberOuterClass.*;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Arrays;
@@ -13,35 +12,33 @@ public class Client {
     private static final int SERVER_PORT = 7001; // Server1 portu
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT)) {
+        try {
+            // Sunucuya bağlan
+            Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
             System.out.println("Connected to server: " + SERVER_HOST + ":" + SERVER_PORT);
 
             // Stream oluştur
             OutputStream output = socket.getOutputStream();
-            InputStream input = socket.getInputStream();
 
             // Abone ekleme (SUBS) isteği gönder
             Subscriber subscriber = createSubscriberForSub();
             sendSubscriberMessage(output, subscriber);
             System.out.println("Subscriber SUBS message sent.");
 
-            // Sunucudan cevap oku
-            System.out.println("Server response: " + readServerResponse(input));
+            // Bekleme ekle, sorun varsa burada zaman kazanabiliriz
+            Thread.sleep(100);
 
             // Abone silme (DEL) isteği gönder
             Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
             sendSubscriberMessage(output, delSubscriber);
             System.out.println("Subscriber DEL message sent.");
 
-            // Sunucudan cevap oku
-            System.out.println("Server response: " + readServerResponse(input));
-
             // Stream ve bağlantıyı kapat
             output.close();
             socket.close();
             System.out.println("Connection closed.");
 
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             System.err.println("Error in client: " + e.getMessage());
         }
     }
@@ -76,19 +73,5 @@ public class Client {
         } catch (IOException e) {
             System.err.println("Failed to send message: " + e.getMessage());
         }
-    }
-
-    // Sunucudan gelen cevabı okuyup string olarak döndürür
-    private static String readServerResponse(InputStream input) {
-        try {
-            byte[] buffer = new byte[1024];
-            int bytesRead = input.read(buffer);
-            if (bytesRead > 0) {
-                return new String(buffer, 0, bytesRead);
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to read server response: " + e.getMessage());
-        }
-        return "No response from server.";
     }
 }

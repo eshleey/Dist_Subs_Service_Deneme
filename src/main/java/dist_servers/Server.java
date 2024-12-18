@@ -16,14 +16,13 @@ public class Server {
     private static final ConcurrentMap<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
     private static final AtomicInteger capacity = new AtomicInteger(1000);
 
+
     public static void main(String[] args) {
         startServers(args);
 
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT);
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE)) {
             System.out.println("Server listening on port: " + PORT);
-
             while (true) {
                 try {
                     Socket clientSocket = serverSocket.accept();
@@ -31,6 +30,7 @@ public class Server {
                     executorService.submit(() -> handleClient(clientSocket));
                 } catch (IOException e) {
                     System.err.println("Connection error: " + e.getMessage());
+                    break;
                 }
             }
         } catch (IOException e) {
@@ -41,18 +41,25 @@ public class Server {
     private static void handleClient(Socket clientSocket) {
         try (InputStream input = clientSocket.getInputStream();
              OutputStream output = clientSocket.getOutputStream()) {
+            while (true) {
+                // İstemciden mesajı al ve işle
+                byte[] subscriberBytes = readFromStream(input);
+                if (subscriberBytes.length == 0) {
+                    System.out.println("No data received from client.");
+                    return;
+                }
+                Subscriber subscriber = Subscriber.parseFrom(subscriberBytes);
 
-            // İstemciden mesajı al ve işle
-            byte[] subscriberBytes = readFromStream(input);
-            Subscriber subscriber = Subscriber.parseFrom(subscriberBytes);
+                System.out.println("Received subscriber request: ID: " + subscriber.getID());
+                System.out.println("Demand Type: " + subscriber.getDemand());
 
-            System.out.println("Received subscriber request: " + subscriber);
+                // Talebi işle ve sonucu istemciye gönder
+                String response = processSubscriber(subscriber);
+                output.write(response.getBytes());
+                output.flush();
 
-            // Talebi işle ve sonucu istemciye gönder
-            String response = processSubscriber(subscriber);
-            output.write(response.getBytes());
-            output.flush();
-
+                System.out.println("Response sent: " + response);
+            }
         } catch (IOException e) {
             System.err.println("Error handling client: " + e.getMessage());
         }
@@ -61,6 +68,10 @@ public class Server {
     private static byte[] readFromStream(InputStream input) throws IOException {
         byte[] buffer = new byte[4096];
         int bytesRead = input.read(buffer);
+        if (bytesRead == -1) {
+            System.out.println("End of stream reached.");
+            return new byte[0];
+        }
         byte[] data = new byte[bytesRead];
         System.arraycopy(buffer, 0, data, 0, bytesRead);
         return data;
@@ -68,12 +79,16 @@ public class Server {
 
     private static String processSubscriber(Subscriber subscriber) {
         switch (subscriber.getDemand()) {
-            case SUBS:
+            case SUBS -> {
                 return addSubscriber(subscriber);
-            case DEL:
-                return removeSubscriber(subscriber.getID());
-            default:
-                return "Unsupported demand type.";
+            }
+            case DEL -> {
+                removeSubscriber(subscriber.getID());
+                return "Subscriber removed successfully.";
+            }
+            default -> {
+                return "Invalid demand type.";
+            }
         }
     }
 
@@ -88,13 +103,14 @@ public class Server {
         }
     }
 
-    private static String removeSubscriber(int id) {
+    private static void removeSubscriber(int id) {
         if (subscribers.remove(id) != null) {
             capacity.incrementAndGet();
             System.out.println("Subscriber removed: " + id);
-            return "Subscriber removed successfully.";
+            System.out.println("Subscriber removed successfully.");
         } else {
-            return "No subscriber with ID: " + id;
+            System.out.println("No subscriber with ID: " + id);
+            System.out.println("No subscriber with given ID.");
         }
     }
 
