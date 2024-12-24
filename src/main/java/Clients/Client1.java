@@ -15,10 +15,10 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class Client3 {
+public class Client1 {
 
     private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 7003;
+    private static final int SERVER_PORT = 7001;
 
     public static void main(String[] args) throws ReflectiveOperationException {
         try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT);

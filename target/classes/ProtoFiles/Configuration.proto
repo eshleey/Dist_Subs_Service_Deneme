@@ -4,5 +4,10 @@ package communication;
 
 message Configuration {
     int32 fault_tolerance_level = 1;
-    string method = 2;
+    MethodType method = 2;
+}
+
+enum MethodType {
+    STRT = 0;
+    STOP = 1;
 }

@@ -33,9 +33,11 @@
     &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;Application.Client (1).executor&quot;: &quot;Run&quot;,
     &quot;Application.Client.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Client1.executor&quot;: &quot;Run&quot;,
     &quot;Application.Client2.executor&quot;: &quot;Run&quot;,
     &quot;Application.Client3.executor&quot;: &quot;Run&quot;,
     &quot;Application.Server.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Server1.executor&quot;: &quot;Run&quot;,
     &quot;Application.Server2.executor&quot;: &quot;Run&quot;,
     &quot;Application.Server3.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
@@ -48,19 +50,21 @@
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.importing&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\elifs\OneDrive\Masaüstü\Dist_Subs_Service_Deneme\Dist_Subs_Service_Deneme\src\main\java\ProtoFiles" />
+      <recent name="C:\Users\elifs\OneDrive\Masaüstü\Dist_Subs_Service_Deneme\Dist_Subs_Service_Deneme\src\main\java\dist_servers" />
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Academic\Sistem Programlama\Project\src\main\java\dist_servers" />
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Academic\Sistem Programlama\Project\src\main\java\Clients" />
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Academic\Sistem Programlama\Project\src\main\java" />
     </key>
   </component>
   <component name="RunManager" selected="Application.Client3">
-    <configuration name="Client" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="Clients.Client" />
+    <configuration name="Client1" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Clients.Client1" />
       <module name="Odev" />
       <extension name="coverage">
         <pattern>
@@ -175,7 +179,7 @@
       <list>
         <item itemvalue="Application.Client3" />
         <item itemvalue="Application.Client2" />
-        <item itemvalue="Application.Client" />
+        <item itemvalue="Application.Client1" />
         <item itemvalue="Application.Server3" />
         <item itemvalue="Application.Server2" />
       </list>

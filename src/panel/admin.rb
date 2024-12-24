@@ -1,8 +1,8 @@
 require 'socket'
 require 'google/protobuf'
-require './Message_pb'
-require './Configuration_pb'
-require './Capacity_pb'
+require_relative './Message_pb'
+require_relative './Configuration_pb'
+require_relative './Capacity_pb'
 
 class ConfigReader
   attr_reader :fault_tolerance_level
@@ -54,7 +54,7 @@ class Capacity
 end
 
 class Admin
-  SERVER_PORTS = [7001, 7002, 7003]
+  SERVER_PORTS = [7004, 7005, 7006]
 
   def initialize(config_file)
     config_reader = ConfigReader.new(config_file)
@@ -62,31 +62,54 @@ class Admin
     @config_message = ConfigurationMessage.new(@fault_tolerance_level, "STRT").message
   end
 
+  def read_response(socket)
+    length_bytes = socket.read(4)
+    if length_bytes.nil? || length_bytes.bytesize < 4
+      raise "Bağlantıdan yeterli uzunluk bilgisi okunamadı."
+    end
+
+    length = length_bytes.unpack1('N')
+    puts "Gelen veri uzunluğu: #{length}"
+
+    if length <= 0 || length > 10_000
+      raise "Geçersiz veri uzunluğu: #{length}"
+    end
+
+    data = socket.read(length)
+    if data.nil? || data.bytesize != length
+      raise "Tam veri alınamadı."
+    end
+
+    message = Communication::Message.decode(data)
+    puts "Gelen mesaj: Demand: #{message.demand}, Response: #{message.response}"
+    puts "Response Türü: #{message.response.class}, Değer: #{message.response}"
+
+    return message
+  end
+
   def send_start_command
     # Sunuculardan gelen yanıtları saklamak için bir hash
     responses = {}
-
+    
     SERVER_PORTS.each do |port|
       begin
         socket = TCPSocket.new('localhost', port)
-        socket.write(@config_message.to_proto)
+        data = @config_message.to_proto
+        socket.write([data.bytesize].pack('N'))
+        socket.write(data)
         puts "Başlatma komutu gönderildi: Server #{port}"
 
-        # Sunucudan yanıt almak için Message nesnesini hazırla
-        response_message = Message.new("STRT", "YEP").message
-        socket.write(response_message.to_proto)
-
-        # Sunucudan gelen yanıtı al
-        response_bytes = socket.read
-        response = Communication::Message.decode(response_bytes)
-
-        # Yanıt "YEP" ise kapasite sorgusu yapacak sunucuları kaydet
-        if response.response == "YEP"
+        response = read_response(socket)
+        
+        case response.response
+        when :YEP
           responses[port] = true
-          puts "Server #{port} 'YEP' yanıtı aldı, kapasite sorgusu yapılacak."
-        else
+          puts "Sunucu: YEP mesajı aldı, işlem başarılı!"
+        when :NOPE
           responses[port] = false
-          puts "Server #{port} 'YEP' yanıtı almadı."
+          puts "Sunucu: NOPE mesajı aldı, işlem başarısız!"
+        else
+          puts "Bilinmeyen yanıt: #{response.response}"
         end
 
         socket.close

@@ -2,11 +2,6 @@ syntax = "proto3";
 
 package communication;
 
-enum DemandType {
-    SUBS = 0; //Abone olma
-    DEL = 1; //Abonelikten çıkma
-}
-
 message Subscriber {
     DemandType demand = 1;          // SUBS, DEL, vb.
     uint32 ID = 2;               // Abone ID'si Ama şunu diyeyim uint32 olabilir çünkü sayı asla negatif olmayacak
@@ -15,4 +10,9 @@ message Subscriber {
     int64 last_accessed = 5;    // Son erişim tarihi
     repeated string interests = 6; // İlgi alanları
     bool isOnline = 7;          // Çevrimiçi durumu
+}
+
+enum DemandType {
+    SUBS = 0; //Abone olma
+    DEL = 1; //Abonelikten çıkma
 }

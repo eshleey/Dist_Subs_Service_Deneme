@@ -5,11 +5,13 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\rMessage.proto\x12\rcommunication\"+\n\x07Message\x12\x0e\n\x06\x64\x65mand\x18\x01 \x01(\t\x12\x10\n\x08response\x18\x02 \x01(\tb\x06proto3"
+descriptor_data = "\n\rMessage.proto\x12\rcommunication\"[\n\x07Message\x12%\n\x06\x64\x65mand\x18\x01 \x01(\x0e\x32\x15.communication.Demand\x12)\n\x08response\x18\x02 \x01(\x0e\x32\x17.communication.Response*\x1d\n\x06\x44\x65mand\x12\t\n\x05\x43PCTY\x10\x00\x12\x08\n\x04STRT\x10\x01*\x1d\n\x08Response\x12\x07\n\x03YEP\x10\x00\x12\x08\n\x04NOPE\x10\x01\x62\x06proto3"
 
 pool = Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Communication
   Message = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("communication.Message").msgclass
+  Demand = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("communication.Demand").enummodule
+  Response = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("communication.Response").enummodule
 end

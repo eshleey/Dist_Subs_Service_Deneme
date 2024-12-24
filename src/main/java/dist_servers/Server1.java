@@ -21,10 +21,10 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("unused")
-public class Server2 {
-    private static final int ADMIN_PORT = 7005;
-    private static final int CLIENT_PORT = 7002;
-    private static final int[] SERVER_PORTS = {7001, 7003};
+public class Server1 {
+    private static final int ADMIN_PORT = 7004;
+    private static final int CLIENT_PORT = 7001;
+    private static final int[] SERVER_PORTS = {7002, 7003};
     private static final String HOST = "localhost";
     private static final int THREAD_POOL_SIZE = 10;
     private static final ConcurrentMap<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
@@ -35,7 +35,7 @@ public class Server2 {
     private static boolean isRunning = false;
 
     public static void main(String[] args) {
-        Server2 server = new Server2();
+        Server1 server = new Server1();
         server.startServer();
     }
 

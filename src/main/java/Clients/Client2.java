@@ -1,78 +1,118 @@
 package Clients;
 
-import communication.SubscriberOuterClass.*;
+import com.google.protobuf.MessageLite;
+import communication.ConfigurationOuterClass.Configuration;
+import communication.ConfigurationOuterClass.MethodType;
+import communication.MessageOuterClass.Message;
+import communication.SubscriberOuterClass.Subscriber;
+import communication.SubscriberOuterClass.DemandType;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class Client2 {
 
-    private static final String SERVER_HOST = "localhost"; // Sunucu adresi
-    private static final int SERVER_PORT = 7002; // Server1 portu
+    private static final String SERVER_HOST = "localhost";
+    private static final int SERVER_PORT = 7002;
 
-    public static void main(String[] args) {
-        try {
-            // Sunucuya bağlan
-            Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
+    public static void main(String[] args) throws ReflectiveOperationException {
+        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
+             DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+             DataInputStream input = new DataInputStream(socket.getInputStream())) {
+
             System.out.println("Connected to server: " + SERVER_HOST + ":" + SERVER_PORT);
 
-            // Stream oluştur
-            OutputStream output = socket.getOutputStream();
+            // Send Configuration
+            Configuration config = createConfiguration();
+            sendProtobufMessage(output, config);
+            System.out.println("Configuration message sent.");
 
-            // Abone ekleme (SUBS) isteği gönder
-            Subscriber subscriber = createSubscriberForSub();
-            sendSubscriberMessage(output, subscriber);
-            System.out.println("Subscriber SUBS message sent.");
-
-            // Bekleme ekle, sorun varsa burada zaman kazanabiliriz
             Thread.sleep(100);
 
-            // Abone silme (DEL) isteği gönder
-            //Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
-            //sendSubscriberMessage(output, delSubscriber);
-            //System.out.println("Subscriber DEL message sent.");
+            // Send SUBS request
+            Subscriber subscriber = createSubscriberForSub();
+            sendProtobufMessage(output, subscriber);
+            System.out.println("Subscriber SUBS message sent.");
 
-            //startClients(args);
+            Thread.sleep(100);
 
-            // Stream ve bağlantıyı kapat
-            output.close();
-            socket.close();
-            System.out.println("Connection closed.");
+            // Send DEL request
+            Subscriber delSubscriber = createSubscriberForDel(subscriber.getID());
+            sendProtobufMessage(output, delSubscriber);
+            System.out.println("Subscriber DEL message sent.");
+
+            // Wait for server response
+            Message response = receiveProtobufMessage(input, Message.class);
+            if (response != null) {
+                System.out.println("Response received: " + response);
+            }
 
         } catch (IOException | InterruptedException e) {
             System.err.println("Error in client: " + e.getMessage());
         }
     }
 
-    // SUBS isteği için Subscriber nesnesi oluşturur
+    private static Configuration createConfiguration() {
+        return Configuration.newBuilder()
+                .setMethod(MethodType.STRT)
+                .setFaultToleranceLevel(1)
+                .build();
+    }
+
     private static Subscriber createSubscriberForSub() {
         return Subscriber.newBuilder()
-                .setDemand(DemandType.SUBS) // Abone ekleme
-                .setID(12) // Benzersiz ID
+                .setDemand(DemandType.SUBS)
+                .setID(14)
                 .setNameSurname("Jane DOE")
                 .setStartDate(System.currentTimeMillis())
                 .setLastAccessed(System.currentTimeMillis())
                 .addAllInterests(Arrays.asList("sports", "lifestyle", "cooking", "psychology"))
-                .setIsOnline(true) // Çevrimiçi durumu
-                .build();
-    }
-    //DEL isteği için Subscriber nesnesi oluşturur
-    private static Subscriber createSubscriberForDel(int id) {
-        return Subscriber.newBuilder()
-                .setDemand(DemandType.DEL) // Abonelikten çıkma isteği
-                .setID(id) // ID üzerinden silme işlemi yapılacak
+                .setIsOnline(true)
                 .build();
     }
 
-    // Subscriber nesnesini sunucuya gönderen fonksiyon
-    private static void sendSubscriberMessage(OutputStream output, Subscriber subscriber) {
+    private static Subscriber createSubscriberForDel(int id) {
+        return Subscriber.newBuilder()
+                .setDemand(DemandType.DEL)
+                .setID(id)
+                .build();
+    }
+
+    // --- Helper methods for sending and receiving Protobuf messages ---
+    private static <T extends MessageLite> void sendProtobufMessage(DataOutputStream output, T message) throws IOException {
+        byte[] data = message.toByteArray();
+        byte[] lengthBytes = ByteBuffer.allocate(4).putInt(data.length).array();
+        output.write(lengthBytes);
+        output.write(data);
+        output.flush();
+    }
+
+    private static <T extends MessageLite> T receiveProtobufMessage(DataInputStream input, Class<T> clazz) throws IOException, ReflectiveOperationException {
         try {
-            byte[] data = subscriber.toByteArray(); // Protobuf mesajını byte[]'e çevir
-            output.write(data); // Veriyi sunucuya gönder
-            output.flush();
-        } catch (IOException e) {
-            System.err.println("Failed to send message: " + e.getMessage());
+            byte[] lengthBytes = new byte[4];
+            int bytesRead = input.read(lengthBytes);
+            if (bytesRead == -1) {
+                return null; // Connection closed
+            }
+            if (bytesRead != 4) {
+                throw new IOException("Could not read full message length.");
+            }
+            int length = ByteBuffer.wrap(lengthBytes).getInt();
+            byte[] data = new byte[length];
+            input.readFully(data);
+            return parseFrom(data, clazz);
+        } catch (EOFException e) {
+            return null; // Connection closed
         }
+    }
+
+    private static <T extends MessageLite> T parseFrom(byte[] data, Class<T> clazz) throws ReflectiveOperationException {
+        java.lang.reflect.Method parseFromMethod = clazz.getMethod("parseFrom", byte[].class);
+        return clazz.cast(parseFromMethod.invoke(null, data));
     }
 }
