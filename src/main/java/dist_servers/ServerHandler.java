@@ -12,7 +12,7 @@ public class ServerHandler {
     private static final int[] SERVER_PORTS = {7001, 7002, 7003};
     private static final String HOST = "localhost";
     private static final int THREAD_POOL_SIZE = 10;
-    private static final ExecutorService adminExecutor = Executors.newFixedThreadPool(2);
+    private static final ExecutorService adminExecutor = Executors.newFixedThreadPool(4);
     private static final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final List<Socket> serverSockets = new CopyOnWriteArrayList<>();
     private static final AdminHandler adminHandler = new AdminHandler();
@@ -67,7 +67,6 @@ public class ServerHandler {
 
     public void connectServer(int port, String host) {
         try {
-            System.out.println("connectServer try");
             Socket serverSocket = new Socket(host, port);
             serverSockets.add(serverSocket);
             System.out.println("Connected to server: " + serverSocket.getInetAddress() + ":" + port);
@@ -79,7 +78,6 @@ public class ServerHandler {
     public void linkServers(ExecutorService executorService, int[] ports, int clientPort, String host) {
         for (int port : ports) {
             if (port != clientPort) {
-                System.out.println("Port: " + port + "\nHost: " + host);
                 executorService.submit(() -> connectServer(port, host));
             }
         }
