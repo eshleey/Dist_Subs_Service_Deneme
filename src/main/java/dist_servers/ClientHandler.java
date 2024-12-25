@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientHandler {
     private static final ConcurrentMap<Integer, SubscriberOuterClass.Subscriber> subscribers = new ConcurrentHashMap<>();
     private static final AtomicInteger capacity = new AtomicInteger(1000);
+    private static final ServerHandler serverHandler = new ServerHandler();
     private static final ProtobufHandler protobufHandler = new ProtobufHandler();
 
     public void acceptClientConnections(ServerSocket serverSocket, ExecutorService executorService, int[] ports, int clientPort, String host) {
@@ -68,7 +69,7 @@ public class ClientHandler {
         } catch (IOException e) {
             System.err.println("IO error on client socket: " + e.getMessage());
         } finally {
-            protobufHandler.closeSocket(clientSocket);
+            serverHandler.closeSocket(clientSocket);
         }
     }
 

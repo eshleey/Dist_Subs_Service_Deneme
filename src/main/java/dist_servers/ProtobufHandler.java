@@ -6,7 +6,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -46,16 +45,6 @@ public class ProtobufHandler {
             return clazz.cast(parseFromMethod.invoke(null, data));
         } catch (Exception e) {
             throw new IOException("Error parsing protobuf message: " + e.getMessage(), e);
-        }
-    }
-
-    public void closeSocket(Socket socket) {
-        if (socket != null && !socket.isClosed()) {
-            try {
-                socket.close();
-            } catch (IOException e) {
-                System.err.println("Error closing socket: " + e.getMessage());
-            }
         }
     }
 }
