@@ -45,7 +45,7 @@ public class ProtobufHandler {
     private <T extends com.google.protobuf.MessageLite> T parseFrom(byte[] data, Class<T> clazz) throws IOException {
         try {
             java.lang.reflect.Method parseFromMethod = clazz.getMethod("parseFrom", byte[].class);
-            return clazz.cast(parseFromMethod.invoke(null, data));
+            return clazz.cast(parseFromMethod.invoke(null, (Object) data));
         } catch (Exception e) {
             throw new IOException("Error parsing protobuf message: " + e.getMessage(), e);
         }

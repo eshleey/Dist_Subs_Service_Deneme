@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,14 +24,14 @@ public class ClientHandler {
         while (true) {
             try {
                 if (serverSocket == null || serverSocket.isClosed()) {
-                    System.err.println("Server socket is closed, stopping client connection attempts.");
+                    System.err.println("Server socket is closed. Stopping client connection attempts.");
                     break;
                 }
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Client connected: " + clientSocket.getInetAddress());
                 executorService.submit(() -> handleClient(clientSocket, port));
             } catch (SocketException e) {
-                System.err.println("ServerSocket is closed, no longer accepting clients.");
+                System.err.println("Server socket is closed. No longer accepting clients.");
                 break;
             } catch (IOException e) {
                 System.err.println("Error accepting client connection: " + e.getMessage());
@@ -44,14 +43,12 @@ public class ClientHandler {
         try (DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream())) {
             while (!clientSocket.isClosed()) {
                 try {
-                    byte[] lengthBytes = new byte[4];
-                    inputStream.readFully(lengthBytes);
-                    int length = ByteBuffer.wrap(lengthBytes).getInt();
-                    byte[] data = new byte[length];
-                    inputStream.readFully(data);
                     Subscriber sub = protobufHandler.receiveProtobufMessage(inputStream, Subscriber.class);
-                    if (sub != null) {
-                        System.out.println("Received subscriber message: " + sub);
+
+                    if (sub == null) {
+                        System.err.println("Received null Subscriber message.");
+                    } else {
+                        System.out.println("Subscriber Message: " + sub);
                         processSubscriber(sub, port);
                     }
                 } catch (EOFException e) {
