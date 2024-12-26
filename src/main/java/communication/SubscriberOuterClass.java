@@ -40,12 +40,28 @@ public final class SubscriberOuterClass {
     SUBS(0),
     /**
      * <pre>
+     * Online
+     * </pre>
+     *
+     * <code>ONLN = 1;</code>
+     */
+    ONLN(1),
+    /**
+     * <pre>
+     * Offline
+     * </pre>
+     *
+     * <code>OFFL = 2;</code>
+     */
+    OFFL(2),
+    /**
+     * <pre>
      * Abonelikten çıkma
      * </pre>
      *
-     * <code>DEL = 1;</code>
+     * <code>DEL = 3;</code>
      */
-    DEL(1),
+    DEL(3),
     UNRECOGNIZED(-1),
     ;
 
@@ -68,12 +84,28 @@ public final class SubscriberOuterClass {
     public static final int SUBS_VALUE = 0;
     /**
      * <pre>
+     * Online
+     * </pre>
+     *
+     * <code>ONLN = 1;</code>
+     */
+    public static final int ONLN_VALUE = 1;
+    /**
+     * <pre>
+     * Offline
+     * </pre>
+     *
+     * <code>OFFL = 2;</code>
+     */
+    public static final int OFFL_VALUE = 2;
+    /**
+     * <pre>
      * Abonelikten çıkma
      * </pre>
      *
-     * <code>DEL = 1;</code>
+     * <code>DEL = 3;</code>
      */
-    public static final int DEL_VALUE = 1;
+    public static final int DEL_VALUE = 3;
 
 
     public final int getNumber() {
@@ -101,7 +133,9 @@ public final class SubscriberOuterClass {
     public static DemandType forNumber(int value) {
       switch (value) {
         case 0: return SUBS;
-        case 1: return DEL;
+        case 1: return ONLN;
+        case 2: return OFFL;
+        case 3: return DEL;
         default: return null;
       }
     }
@@ -1517,8 +1551,8 @@ public final class SubscriberOuterClass {
       ".DemandType\022\n\n\002ID\030\002 \001(\r\022\024\n\014name_surname\030" +
       "\003 \001(\t\022\022\n\nstart_date\030\004 \001(\003\022\025\n\rlast_access" +
       "ed\030\005 \001(\003\022\021\n\tinterests\030\006 \003(\t\022\020\n\010isOnline\030" +
-      "\007 \001(\010*\037\n\nDemandType\022\010\n\004SUBS\020\000\022\007\n\003DEL\020\001b\006" +
-      "proto3"
+      "\007 \001(\010*3\n\nDemandType\022\010\n\004SUBS\020\000\022\010\n\004ONLN\020\001\022" +
+      "\010\n\004OFFL\020\002\022\007\n\003DEL\020\003b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,

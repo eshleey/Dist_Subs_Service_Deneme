@@ -63,7 +63,7 @@
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Academic\Sistem Programlama\Project\src\main\java" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Server3">
+  <component name="RunManager" selected="Application.Client1">
     <configuration name="Client1" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Clients.Client1" />
       <module name="Odev" />
@@ -95,7 +95,7 @@
       <module name="Odev" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="dist_servers.*" />
+          <option name="PATTERN" value="communication.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -108,7 +108,7 @@
       <module name="Odev" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="dist_servers.*" />
+          <option name="PATTERN" value="communication.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -121,7 +121,7 @@
       <module name="Odev" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="dist_servers.*" />
+          <option name="PATTERN" value="communication.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -178,10 +178,10 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Client1" />
+        <item itemvalue="Application.Server1" />
         <item itemvalue="Application.Server3" />
         <item itemvalue="Application.Server2" />
-        <item itemvalue="Application.Server1" />
-        <item itemvalue="Application.Client1" />
         <item itemvalue="Application.Client3" />
       </list>
     </recent_temporary>

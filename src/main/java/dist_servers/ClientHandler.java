@@ -1,6 +1,7 @@
 package dist_servers;
 
-import communication.SubscriberOuterClass;
+import communication.ProtobufHandler;
+import communication.SubscriberOuterClass.Subscriber;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -14,12 +15,13 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientHandler {
-    private static final ConcurrentMap<Integer, SubscriberOuterClass.Subscriber> subscribers = new ConcurrentHashMap<>();
+    private static final int[] SERVER_PORTS = {7001, 7002, 7003};
+    private static final String HOST = "localhost";
+    private static final ConcurrentMap<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
     private static final AtomicInteger capacity = new AtomicInteger(1000);
-    private static final ServerHandler serverHandler = new ServerHandler();
     private static final ProtobufHandler protobufHandler = new ProtobufHandler();
 
-    public void acceptClientConnections(ServerSocket serverSocket, ExecutorService executorService, int[] ports, int clientPort, String host) {
+    public static void acceptClientConnections(ServerSocket serverSocket, ExecutorService executorService, int port) {
         while (true) {
             try {
                 if (serverSocket == null || serverSocket.isClosed()) {
@@ -28,9 +30,9 @@ public class ClientHandler {
                 }
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Client connected: " + clientSocket.getInetAddress());
-                executorService.submit(() -> handleClient(clientSocket, ports, clientPort, host));
+                executorService.submit(() -> handleClient(clientSocket, port));
             } catch (SocketException e) {
-                System.err.println("Server socket is closed, no longer accepting clients.");
+                System.err.println("ServerSocket is closed, no longer accepting clients.");
                 break;
             } catch (IOException e) {
                 System.err.println("Error accepting client connection: " + e.getMessage());
@@ -38,9 +40,8 @@ public class ClientHandler {
         }
     }
 
-    private void handleClient(Socket clientSocket, int[] ports, int clientPort, String host) {
-        try (DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream());
-             DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream())) {
+    private static void handleClient(Socket clientSocket, int port) {
+        try (DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream())) {
             while (!clientSocket.isClosed()) {
                 try {
                     byte[] lengthBytes = new byte[4];
@@ -48,10 +49,10 @@ public class ClientHandler {
                     int length = ByteBuffer.wrap(lengthBytes).getInt();
                     byte[] data = new byte[length];
                     inputStream.readFully(data);
-                    SubscriberOuterClass.Subscriber sub = protobufHandler.receiveProtobufMessage(inputStream, SubscriberOuterClass.Subscriber.class);
+                    Subscriber sub = protobufHandler.receiveProtobufMessage(inputStream, Subscriber.class);
                     if (sub != null) {
                         System.out.println("Received subscriber message: " + sub);
-                        processSubscriber(sub, ports, clientPort, host);
+                        processSubscriber(sub, port);
                     }
                 } catch (EOFException e) {
                     System.out.println("Client connection closed gracefully.");
@@ -69,19 +70,20 @@ public class ClientHandler {
         } catch (IOException e) {
             System.err.println("IO error on client socket: " + e.getMessage());
         } finally {
-            serverHandler.closeSocket(clientSocket);
+            DistributedServerHandler.closeSocket(clientSocket);
         }
     }
 
-    private void processSubscriber(SubscriberOuterClass.Subscriber sub, int[] ports, int clientPort, String host) {
+    private static void processSubscriber(Subscriber sub, int port) {
         switch (sub.getDemand()) {
             case SUBS -> {
+                System.out.println(subscribers.containsKey(sub.getID()));
                 if (!subscribers.containsKey(sub.getID())) {
                     if (subscribers.size() < capacity.get()) {
                         subscribers.put(sub.getID(), sub);
                         System.out.println("Subscriber added: ID " + sub.getID());
                     } else {
-                        forwardToOtherServers(sub, ports, clientPort, host);
+                        ForwardToOtherServers(sub, port);
                     }
                 } else {
                     System.out.println("Already subscribed with ID: " + sub.getID());
@@ -99,11 +101,11 @@ public class ClientHandler {
         }
     }
 
-    private void forwardToOtherServers(SubscriberOuterClass.Subscriber sub, int[] ports, int clientPort, String host) {
+    private static void ForwardToOtherServers(Subscriber sub, int clientPort) {
         if (subscribers.size() >= capacity.get()) {
-            for (int port : ports) {
+            for (int port : SERVER_PORTS) {
                 if (port != clientPort) {
-                    try (Socket socket = new Socket(host, port);
+                    try (Socket socket = new Socket(HOST, port);
                          DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
                         protobufHandler.sendProtobufMessage(output, sub);
                         System.out.println("Subscriber forwarded to server on port: " + port);

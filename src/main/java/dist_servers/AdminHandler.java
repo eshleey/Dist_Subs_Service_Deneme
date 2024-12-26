@@ -1,9 +1,6 @@
 package dist_servers;
 
-import communication.CapacityOuterClass;
-import communication.ConfigurationOuterClass;
-import communication.MessageOuterClass;
-import communication.SubscriberOuterClass;
+import communication.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -19,10 +16,10 @@ public class AdminHandler {
     private static final ConcurrentMap<Integer, SubscriberOuterClass.Subscriber> subscribers = new ConcurrentHashMap<>();
     private static final Queue<SubscriberOuterClass.Subscriber> queue = new ConcurrentLinkedQueue<>();
     private static boolean isRunning = false;
-    private static final ServerHandler serverHandler = new ServerHandler();
+    private static final DistributedServerHandler DISTRIBUTED_SERVER_HANDLER = new DistributedServerHandler();
     private static final ProtobufHandler protobufHandler = new ProtobufHandler();
 
-    public void acceptAdminConnections(ServerSocket serverSocket, ExecutorService executorService, int[] ports, int clientPort, String host) {
+    public static void acceptAdminConnections(ServerSocket serverSocket, ExecutorService executorService, int[] ports, int clientPort, String host) {
         while (true) {
             try {
                 if (serverSocket == null || serverSocket.isClosed()) {
@@ -41,7 +38,7 @@ public class AdminHandler {
         }
     }
 
-    public void handleAdmin(Socket adminSocket, ExecutorService executorService, int[] ports, int clientPort, String host) {
+    public static void handleAdmin(Socket adminSocket, ExecutorService executorService, int[] ports, int clientPort, String host) {
         try (DataInputStream input = new DataInputStream(adminSocket.getInputStream());
              DataOutputStream output = new DataOutputStream(adminSocket.getOutputStream())) {
 
@@ -49,7 +46,6 @@ public class AdminHandler {
             ConfigurationOuterClass.Configuration config = protobufHandler.receiveProtobufMessage(input, ConfigurationOuterClass.Configuration.class);
             if (config != null) {
                 System.out.println("Configuration received: " + config);
-                int toleranceLevel = config.getFaultToleranceLevel();
                 boolean start = config.getMethod() == ConfigurationOuterClass.MethodType.STRT;
                 isRunning = start;
 
@@ -62,7 +58,11 @@ public class AdminHandler {
                 System.out.println("Response sent to admin: " + responseMessage.getResponse());
 
                 if (start) {
-                    serverHandler.linkServers(executorService, ports, clientPort, host);
+                    for (int port : ports) {
+                        if (port != clientPort) {
+                            executorService.submit(() -> DISTRIBUTED_SERVER_HANDLER.connectServer(port, host));
+                        }
+                    }
                 }
             }
 
@@ -91,7 +91,7 @@ public class AdminHandler {
         } catch (IOException e) {
             System.err.println("Error handling admin connection: " + e.getMessage());
         } finally {
-            serverHandler.closeSocket(adminSocket);
+            DistributedServerHandler.closeSocket(adminSocket);
         }
     }
 }

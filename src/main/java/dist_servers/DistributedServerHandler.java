@@ -1,37 +1,35 @@
 package dist_servers;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.net.Socket;
+import java.net.ServerSocket;
+import java.io.IOException;
 
-public class ServerHandler {
+public class DistributedServerHandler {
     private static final int[] SERVER_PORTS = {7001, 7002, 7003};
     private static final String HOST = "localhost";
     private static final int THREAD_POOL_SIZE = 10;
-    private static final ExecutorService adminExecutor = Executors.newFixedThreadPool(4);
     private static final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final List<Socket> serverSockets = new CopyOnWriteArrayList<>();
-    private static final AdminHandler adminHandler = new AdminHandler();
-    private static final ClientHandler clientHandler = new ClientHandler();
 
-    public void startServer(int adminPort, int clientPort) {
+    static void startServer(int adminPort, int clientPort) {
         ServerSocket adminServerSocket = null;
         ServerSocket clientServerSocket = null;
+
         try {
             adminServerSocket = new ServerSocket(adminPort);
             System.out.println("Server listening for admin on port: " + adminPort);
             clientServerSocket = new ServerSocket(clientPort);
             System.out.println("Server listening for clients on port: " + clientPort);
 
-            final ServerSocket finalClientSocket = clientServerSocket;
-            final ServerSocket finalAdminSocket = adminServerSocket;
+            ServerSocket finalAdminServerSocket = adminServerSocket;
+            ServerSocket finalClientServerSocket = clientServerSocket;
 
-            executorService.submit(() -> clientHandler.acceptClientConnections(finalClientSocket, executorService, SERVER_PORTS, clientPort, HOST));
-            adminExecutor.submit(() -> adminHandler.acceptAdminConnections(finalAdminSocket, adminExecutor, SERVER_PORTS, clientPort, HOST));
+            executorService.submit(() -> AdminHandler.acceptAdminConnections(finalAdminServerSocket, executorService, SERVER_PORTS, adminPort, HOST));
+            executorService.submit(() -> ClientHandler.acceptClientConnections(finalClientServerSocket, executorService, clientPort));
 
             while (true) {
                 try {
@@ -58,7 +56,7 @@ public class ServerHandler {
                     clientServerSocket.close();
                     System.out.println("Client server socket closed.");
                 } catch (IOException e) {
-                    System.err.println("Error closing client server socket: " + e.getMessage());
+                    System.err.println("Error closing client server socket. " + e.getMessage());
                 }
             }
             executorService.shutdown();
@@ -75,15 +73,7 @@ public class ServerHandler {
         }
     }
 
-    public void linkServers(ExecutorService executorService, int[] ports, int clientPort, String host) {
-        for (int port : ports) {
-            if (port != clientPort) {
-                executorService.submit(() -> connectServer(port, host));
-            }
-        }
-    }
-
-    public void closeSocket(Socket socket) {
+    public static void closeSocket(Socket socket) {
         if (socket != null && !socket.isClosed()) {
             try {
                 socket.close();

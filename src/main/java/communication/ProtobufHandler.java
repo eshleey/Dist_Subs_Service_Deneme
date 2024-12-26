@@ -1,4 +1,4 @@
-package dist_servers;
+package communication;
 
 import com.google.protobuf.MessageLite;
 
@@ -31,8 +31,11 @@ public class ProtobufHandler {
                 throw new IOException("Could not read full message length.");
             }
             int length = ByteBuffer.wrap(lengthBytes).getInt();
+            System.out.println("Length Bytes: " + Arrays.toString(lengthBytes));
             byte[] data = new byte[length];
+            System.out.println("Data: " + Arrays.toString(data));
             input.readFully(data);
+            System.out.println(parseFrom(data, clazz));
             return parseFrom(data, clazz);
         } catch (EOFException e) {
             return null;
