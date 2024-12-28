@@ -5,12 +5,12 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\x13\x43onfiguration.proto\x12\rcommunication\"Y\n\rConfiguration\x12\x1d\n\x15\x66\x61ult_tolerance_level\x18\x01 \x01(\x05\x12)\n\x06method\x18\x02 \x01(\x0e\x32\x19.communication.MethodType* \n\nMethodType\x12\x08\n\x04STRT\x10\x00\x12\x08\n\x04STOP\x10\x01\x62\x06proto3"
+descriptor_data = "\n\x13\x43onfiguration.proto\x12\x14\x63ommunication_config\"`\n\rConfiguration\x12\x1d\n\x15\x66\x61ult_tolerance_level\x18\x01 \x01(\x05\x12\x30\n\x06method\x18\x02 \x01(\x0e\x32 .communication_config.MethodType* \n\nMethodType\x12\x08\n\x04STRT\x10\x00\x12\x08\n\x04STOP\x10\x01\x62\x06proto3"
 
 pool = Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
-module Communication
-  Configuration = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("communication.Configuration").msgclass
-  MethodType = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("communication.MethodType").enummodule
+module CommunicationConfig
+  Configuration = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("communication_config.Configuration").msgclass
+  MethodType = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("communication_config.MethodType").enummodule
 end

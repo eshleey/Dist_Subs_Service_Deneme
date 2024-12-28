@@ -12,9 +12,7 @@ import java.util.Arrays;
 public class ProtobufHandler {
     public <T extends MessageLite> void sendProtobufMessage(DataOutputStream output, T message) throws IOException {
         byte[] data = message.toByteArray();
-        System.out.println("Data: " + Arrays.toString(data));
         byte[] lengthBytes = ByteBuffer.allocate(4).putInt(data.length).array();
-        System.out.println("Length Bytes: " + Arrays.toString(lengthBytes));
         output.write(lengthBytes);
         output.write(data);
         output.flush();
@@ -31,9 +29,7 @@ public class ProtobufHandler {
                 throw new IOException("Could not read full message length.");
             }
             int length = ByteBuffer.wrap(lengthBytes).getInt();
-            System.out.println("Length Bytes: " + Arrays.toString(lengthBytes));
             byte[] data = new byte[length];
-            System.out.println("Data: " + Arrays.toString(data));
             input.readFully(data);
             System.out.println(parseFrom(data, clazz));
             return parseFrom(data, clazz);
