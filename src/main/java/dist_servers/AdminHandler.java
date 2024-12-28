@@ -3,7 +3,6 @@ package dist_servers;
 import communication.CapacityOuterClass.Capacity;
 import communication.MessageOuterClass.*;
 import communication.SubscriberOuterClass.Subscriber;
-import communication.ConfigurationOuterClass.*;
 import communication.ProtobufHandler;
 
 import java.io.DataInputStream;
@@ -74,12 +73,7 @@ public class AdminHandler {
                         if (request.getDemand() == Demand.CPCTY) {
                             System.out.println("Request from admin received: " + request.getDemand());
                             long timestamp = Instant.now().getEpochSecond();
-                            Capacity capacity = Capacity.newBuilder()
-                                    .setServer1Status(1000)
-                                    .setServer2Status(1000)
-                                    .setServer3Status(1000)
-                                    .setTimestamp(timestamp)
-                                    .build();
+                            Capacity capacity = Capacity.newBuilder().setServer1Status(1000).setTimestamp(timestamp).build();
                             protobufHandler.sendProtobufMessage(output, capacity);
                             System.out.println("Capacity sent to admin: " + capacity);
                         }
