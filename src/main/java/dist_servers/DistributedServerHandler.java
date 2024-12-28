@@ -28,7 +28,7 @@ public class DistributedServerHandler {
             ServerSocket finalAdminServerSocket = adminServerSocket;
             ServerSocket finalClientServerSocket = clientServerSocket;
 
-            executorService.submit(() -> AdminHandler.acceptAdminConnections(finalAdminServerSocket, executorService, SERVER_PORTS, adminPort, HOST));
+            executorService.submit(() -> AdminHandler.acceptAdminConnections(finalAdminServerSocket, executorService, SERVER_PORTS, clientPort, HOST));
             executorService.submit(() -> ClientHandler.acceptClientConnections(finalClientServerSocket, executorService, clientPort));
 
             while (true) {

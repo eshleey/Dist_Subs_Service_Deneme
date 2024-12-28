@@ -18,6 +18,20 @@ public class SubscriberHandler {
                 .build();
     }
 
+    public static Subscriber createSubscriberForOnln(int id) {
+        return Subscriber.newBuilder()
+                .setDemand(DemandType.ONLN)
+                .setID(id)
+                .build();
+    }
+
+    public static Subscriber createSubscriberForOffl(int id) {
+        return Subscriber.newBuilder()
+                .setDemand(DemandType.OFFL)
+                .setID(id)
+                .build();
+    }
+
     public static Subscriber createSubscriberForDel(int id) {
         return Subscriber.newBuilder()
                 .setDemand(DemandType.DEL)

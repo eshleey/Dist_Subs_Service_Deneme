@@ -74,7 +74,6 @@ public class ClientHandler {
     private static void processSubscriber(Subscriber sub, int port) {
         switch (sub.getDemand()) {
             case SUBS -> {
-                System.out.println(subscribers.containsKey(sub.getID()));
                 if (!subscribers.containsKey(sub.getID())) {
                     if (subscribers.size() < capacity.get()) {
                         subscribers.put(sub.getID(), sub);
@@ -84,6 +83,38 @@ public class ClientHandler {
                     }
                 } else {
                     System.out.println("Already subscribed with ID: " + sub.getID());
+                }
+            }
+            case ONLN -> {
+                if (subscribers.containsKey(sub.getID())) {
+                    if (!subscribers.get(sub.getID()).getIsOnline()) {
+                        Subscriber updatedSub = subscribers.get(sub.getID()).toBuilder()
+                                .setIsOnline(true)
+                                .build();
+
+                        subscribers.put(sub.getID(), updatedSub);
+                        System.out.println("Subscriber status made online: ID " + sub.getID());
+                    } else {
+                        System.out.println("Subscriber status already online: ID" + sub.getID());
+                    }
+                } else {
+                    System.out.println("No subscriber with ID: " + sub.getID());
+                }
+            }
+            case OFFL -> {
+                if (subscribers.containsKey(sub.getID())) {
+                    if (subscribers.get(sub.getID()).getIsOnline()) {
+                        Subscriber updatedSub = subscribers.get(sub.getID()).toBuilder()
+                                .setIsOnline(false)
+                                .build();
+
+                        subscribers.put(sub.getID(), updatedSub);
+                        System.out.println("Subscriber status made offline: ID " + sub.getID());
+                    } else {
+                        System.out.println("Subscriber status already offline: ID" + sub.getID());
+                    }
+                } else {
+                    System.out.println("No subscriber with ID: " + sub.getID());
                 }
             }
             case DEL -> {

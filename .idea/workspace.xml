@@ -63,9 +63,22 @@
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Academic\Sistem Programlama\Project\src\main\java" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Client1">
+  <component name="RunManager" selected="Application.Client3">
     <configuration name="Client1" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Clients.Client1" />
+      <module name="Odev" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="Clients.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Client2" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Clients.Client2" />
       <module name="Odev" />
       <extension name="coverage">
         <pattern>
@@ -83,19 +96,6 @@
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="Clients.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Server1" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="dist_servers.Server1" />
-      <module name="Odev" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="communication.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -178,11 +178,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Client3" />
+        <item itemvalue="Application.Client2" />
         <item itemvalue="Application.Client1" />
         <item itemvalue="Application.Server3" />
         <item itemvalue="Application.Server2" />
-        <item itemvalue="Application.Server1" />
-        <item itemvalue="Application.Client3" />
       </list>
     </recent_temporary>
   </component>

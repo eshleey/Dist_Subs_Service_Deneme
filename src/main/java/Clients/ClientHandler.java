@@ -56,13 +56,15 @@ public class ClientHandler {
         Subscriber subscriber = switch (request) {
             case "SUBS" -> SubscriberHandler.createSubscriberForSubs(id, "Jane DOE",
                     Arrays.asList("sports", "lifestyle", "cooking", "psychology"));
+            case "ONLN" -> SubscriberHandler.createSubscriberForOnln(id);
+            case "OFFL" -> SubscriberHandler.createSubscriberForOffl(id);
             case "DEL" -> SubscriberHandler.createSubscriberForDel(id);
             default -> throw new IllegalArgumentException("Invalid request type: " + request);
         };
 
-        System.out.println("SUBS Subscriber: " + subscriber);
+        System.out.println("Subscriber: " + subscriber);
         protobufHandler.sendProtobufMessage(output, subscriber);
-        System.out.println("Subscriber " + request + " request sent.");
+        System.out.println("Request: " + request);
     }
 
     public static void receiveResponse(DataInputStream input) throws IOException {
