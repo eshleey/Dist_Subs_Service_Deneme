@@ -54,142 +54,126 @@ class Capacity
 end
 
 class Admin
-  SERVER_PORTS = [7004, 7005, 7006]
-
+  SERVER_PORTS = [7001, 7002, 7003]
+ 
   def initialize(config_file)
     config_reader = ConfigReader.new(config_file)
     @fault_tolerance_level = config_reader.fault_tolerance_level
     @config_message = Configuration.new(@fault_tolerance_level, "STRT").message
   end
-
-  def read_message(socket)
-    length_bytes = socket.read(4)
-    if length_bytes.nil? || length_bytes.bytesize < 4
-      raise "Bağlantıdan yeterli uzunluk bilgisi okunamadı."
-    end
-
-    length = length_bytes.unpack1('N')
-
-    if length <= 0 || length > 10_000
-      raise "Geçersiz veri uzunluğu: #{length}"
-    end
-
-    data = socket.read(length)
-    if data.nil? || data.bytesize != length
-      raise "Tam veri alınamadı."
-    end
-
-    message = Communication::Message.decode(data)
-    puts "Gelen mesaj: Demand: #{message.demand}, Response: #{message.response}"
-
-    return message
-  end
-
-
-  def read_capacity(socket)
-    puts "read_capacity içerisine girdi."
-    length_bytes = socket.read(4)
-    if length_bytes.nil? || length_bytes.bytesize < 4
-      raise "Bağlantıdan yeterli uzunluk bilgisi okunamadı."
-    end
-
-    length = length_bytes.unpack1('N')
-
-    if length <= 0 || length > 10_000
-      raise "Geçersiz veri uzunluğu: #{length}"
-    end
-
-    data = socket.read(length)
-    if data.nil? || data.bytesize != length
-      raise "Tam veri alınamadı."
-    end
-
-    begin
-      capacity = Communication::Capacity.decode(data)
-    
-      status_str = if capacity.respond_to?(:server1_status)
-        "Server 1: #{capacity.server1_status}, Server 2: #{capacity.server2_status}, Server 3: #{capacity.server3_status}"
-      else
-        "Server Status: #{capacity.server_status}"
+ 
+  def create_sockets
+      sockets = []
+      SERVER_PORTS.each do |port|
+        socket = TCPSocket.new('localhost', port)
+        sockets << { socket: socket, port: port }
       end
-
-      puts "Server #{socket.peeraddr[1]} - Durum: #{status_str}, Zaman damgası: #{capacity.timestamp}"
-
-      return capacity
-    rescue Google::Protobuf::ParseError => e
-      puts "read_capacity: Protobuf decode hatası: #{e.message}"
-      return nil
+      sockets
     end
-  end
-
+ 
   def send_start_command
     responses = {}
-
-    SERVER_PORTS.each do |port|
-      begin
-        socket = TCPSocket.new('localhost', port)
-        data = @config_message.to_proto
-        socket.write([data.bytesize].pack('N'))
-        socket.write(data)
-        puts "Başlatma komutu gönderildi: Server #{port}"
-
-        response = read_message(socket)
+    sockets_with_ports = create_sockets
     
+    sockets_with_ports.each do |item|
+      socket = item[:socket]
+      port = item[:port]
+      begin
+        request_data = @config_message.to_proto
+        send_request(socket, request_data)
+        puts "Başlama komutu gönderildi: Server #{port}"
+ 
+        response_data = read_response(socket)
+        response = Communication::Message.decode(response_data)
+        puts "Gelen mesaj: Demand: #{response.demand}, Response: #{response.response}"
+        
         case response.response
-          when :YEP
-            responses[port] = true
-            puts "Sunucu: YEP mesajı aldı, işlem başarılı!"
-          when :NOPE
-            responses[port] = false
-            puts "Sunucu: NOPE mesajı aldı, işlem başarısız!"
-          else
-            puts "Bilinmeyen yanıt: #{response.response}"
+        when :YEP
+          responses[port] = true
+          puts "YEP mesajı aldı, işlem başarılı!"
+        when :NOPE
+          responses[port] = false
+          puts "NOPE mesajı aldı, işlem başarısız!"
+          send_stop_command(socket,port)
+        else
+          puts "Bilinmeyen yanıt: #{response.response}"
+          send_stop_command(socket,port)
         end
-
-        socket.close
+        
       rescue StandardError => e
         puts "send_start_command: Sunucuya bağlanırken hata oluştu: #{e.message}"
       end
     end
-    check_capacity2(responses)
-    send_stop_command
-  end
-
-    def check_capacity2(responses)
-    puts "check_capacity içerisine girdi."
-      SERVER_PORTS.each do |port|
-        if responses[port] == true
-            begin
-                socket = TCPSocket.new('localhost', port)
-                request = Message.new("CPCTY", "YEP").message.to_proto
-                socket.write([request.bytesize].pack('N'))
-                socket.write(request)
-                puts "Kapasite sorgusu gönderildi: Server #{port}"
-
-                capacity = read_capacity(socket)
-                socket.close
-            rescue StandardError => e
-                puts "check_capacity: Sunucuya bağlanırken hata oluştu: #{e.message}"
-            end
-        end
-    end
-  end
-
-    def send_stop_command
-      responses = {}
-      SERVER_PORTS.each do |port|
+    
+    if responses.values.all?
+      loop do
         begin
-           socket = TCPSocket.new('localhost', port)
-           config_message = Configuration.new(@fault_tolerance_level, "STOP").message
-           data = config_message.to_proto
-           socket.write([data.bytesize].pack('N'))
-           socket.write(data)
-           puts "Durdurma komutu gönderildi: Server #{port}"
-           socket.close
+          check_capacity(sockets_with_ports, responses)
+          sleep(5)
         rescue StandardError => e
-          puts "send_stop_command: Sunucuya bağlanırken hata oluştu: #{e.message}"
+          puts "check_capacity: Kapasite sorgusunda hata oluştu: #{e.message}"
+          sockets_with_ports.each {|item| send_stop_command(item[:socket], item[:port])}
+          break
         end
+      end
     end
+ 
+    sockets_with_ports.each {|item| item[:socket].close}
+  end
+ 
+  def check_capacity(sockets_with_ports, responses)
+      sockets_with_ports.each do |item|
+        socket = item[:socket]
+        port = item[:port]
+        if responses[port] == true
+          begin
+              data = Message.new("CPCTY", "YEP").message.to_proto
+              send_request(socket, data)
+              puts "Kapasite sorgusu gönderildi: Server #{port}"
+    
+              capacity_data = read_response(socket)
+              capacity = Communication::Capacity.decode(capacity_data)
+              puts "Server 1: #{capacity.server1_status}, Server 2: #{capacity.server2_status}, Server 3: #{capacity.server3_status}, "
+          rescue StandardError => e
+              puts "check_capacity: Sunucuya bağlanırken hata oluştu: #{e.message}"
+          end
+      end
+    end
+  end
+ 
+  def send_stop_command(socket, port)
+      begin
+          data = Configuration.new(@fault_tolerance_level, "STOP").message.to_proto
+          send_request(socket, data)
+          puts "Durdurma komutu gönderildi: Server #{port}"
+      rescue StandardError => e
+          puts "send_stop_command: Sunucuya bağlanırken hata oluştu: #{e.message}"
+      end
+  end
+
+  def send_request(socket, data)
+    socket.write([data.bytesize].pack('N'))
+    socket.write(data)
+  end
+
+  def read_response(socket)
+    length_bytes = socket.read(4)
+    if length_bytes.nil? || length_bytes.bytesize < 4
+      raise "Bağlantıdan yeterli uzunluk bilgisi okunamadı."
+    end
+
+    length = length_bytes.unpack1('N')
+
+    if length <= 0 || length > 10_000
+      raise "Geçersiz veri uzunluğu: #{length}"
+    end
+
+    data = socket.read(length)
+    if data.nil? || data.bytesize != length
+      raise "Tam veri alınamadı."
+    end
+
+    return data
   end
 end
 

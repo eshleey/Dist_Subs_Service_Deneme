@@ -29,31 +29,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Application.Client (1).executor&quot;: &quot;Run&quot;,
-    &quot;Application.Client.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Client1.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Client2.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Client3.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Server.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Server1.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Server2.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Server3.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/elifs/OneDrive/Masaüstü/Dist Subs Servers&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Application.Client (1).executor": "Run",
+    "Application.Client.executor": "Run",
+    "Application.Client1.executor": "Run",
+    "Application.Client2.executor": "Run",
+    "Application.Client3.executor": "Run",
+    "Application.Server.executor": "Run",
+    "Application.Server1.executor": "Run",
+    "Application.Server2.executor": "Run",
+    "Application.Server3.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Dist Subs Servers",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Dist_Subs_Service_Deneme\Dist_Subs_Service_Deneme\src\main\java\ProtoFiles" />
@@ -63,9 +63,22 @@
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Academic\Sistem Programlama\Project\src\main\java" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Client1">
+  <component name="RunManager" selected="Application.Client3">
     <configuration name="Client1" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Clients.Client1" />
+      <module name="Odev" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="Clients.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Client2" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Clients.Client2" />
       <module name="Odev" />
       <extension name="coverage">
         <pattern>
@@ -83,19 +96,6 @@
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="Clients.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Server1" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="dist_servers.Server1" />
-      <module name="Odev" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="dist_servers.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -178,11 +178,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Client3" />
+        <item itemvalue="Application.Client2" />
         <item itemvalue="Application.Client1" />
         <item itemvalue="Application.Server3" />
         <item itemvalue="Application.Server2" />
-        <item itemvalue="Application.Server1" />
-        <item itemvalue="Application.Client3" />
       </list>
     </recent_temporary>
   </component>

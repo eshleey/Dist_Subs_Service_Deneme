@@ -3,7 +3,7 @@ package Clients;
 import java.io.IOException;
 
 public class Client2 {
-    private static final int PORT = 7002;
+    private static final int PORT = 6002;
     private static final int ID = 15;
 
     public static void main(String[] args) {

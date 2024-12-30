@@ -4,7 +4,6 @@ import communication.ProtobufHandler;
 import communication.SubscriberOuterClass.Subscriber;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -14,24 +13,62 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientHandler {
-    private static final int[] SERVER_PORTS = {7001, 7002, 7003};
+    private int clientPort;
+    private static final int[] SERVER_PORTS = {6001, 6002, 6003};
     private static final String HOST = "localhost";
+    private static final int THREAD_POOL_SIZE = 10;
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final ConcurrentMap<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
     private static final AtomicInteger capacity = new AtomicInteger(1000);
     private static final ProtobufHandler protobufHandler = new ProtobufHandler();
 
-    public static void acceptClientConnections(ServerSocket serverSocket, ExecutorService executorService, int port) {
-        while (true) {
-            try {
-                if (serverSocket == null || serverSocket.isClosed()) {
-                    System.err.println("Server socket is closed. Stopping client connection attempts.");
+    public ClientHandler(int clientPort) {
+        this.clientPort = clientPort;
+    }
+
+    public void startClient() {
+        ServerSocket clientServerSocket = null;
+        try {
+            clientServerSocket = new ServerSocket(clientPort);
+            System.out.println("Server listening for client on port: " + clientPort);
+            ServerSocket finalClientSocket = clientServerSocket;
+            executorService.submit(() -> acceptClientConnections(finalClientSocket));
+
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     break;
                 }
-                Socket clientSocket = serverSocket.accept();
+            }
+        } catch (IOException e) {
+            System.err.println("Server error: " + e.getMessage());
+        } finally {
+            if (clientServerSocket != null && !clientServerSocket.isClosed()) {
+                try {
+                    clientServerSocket.close();
+                    System.out.println("Client server socket is closed.");
+                } catch (IOException e) {
+                    System.err.println("Error closing client server socket: " + e.getMessage());
+                }
+            }
+            executorService.shutdown();
+        }
+    }
+
+    public void acceptClientConnections(ServerSocket clientServerSocket) {
+        while (true) {
+            try {
+                if (clientServerSocket == null || clientServerSocket.isClosed()) {
+                    System.err.println("Client server socket is closed. Stopping client connection attempts.");
+                    break;
+                }
+                Socket clientSocket = clientServerSocket.accept();
                 System.out.println("Client connected: " + clientSocket.getInetAddress());
-                executorService.submit(() -> handleClient(clientSocket, port));
+                executorService.submit(() -> handleClient(clientSocket));
             } catch (SocketException e) {
-                System.err.println("Server socket is closed. No longer accepting clients.");
+                System.err.println("Client server socket is closed. No longer accepting clients.");
                 break;
             } catch (IOException e) {
                 System.err.println("Error accepting client connection: " + e.getMessage());
@@ -39,7 +76,7 @@ public class ClientHandler {
         }
     }
 
-    private static void handleClient(Socket clientSocket, int port) {
+    private void handleClient(Socket clientSocket) {
         try (DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream())) {
             while (!clientSocket.isClosed()) {
                 try {
@@ -49,7 +86,7 @@ public class ClientHandler {
                         System.err.println("Received null Subscriber message.");
                     } else {
                         System.out.println("Subscriber Message: " + sub);
-                        processSubscriber(sub, port);
+                        processSubscriber(sub);
                     }
                 } catch (EOFException e) {
                     System.out.println("Client connection closed gracefully.");
@@ -67,19 +104,17 @@ public class ClientHandler {
         } catch (IOException e) {
             System.err.println("IO error on client socket: " + e.getMessage());
         } finally {
-            DistributedServerHandler.closeSocket(clientSocket);
+            // DistributedServerHandler.closeSocket(clientSocket);
         }
     }
 
-    private static void processSubscriber(Subscriber sub, int port) {
+    private void processSubscriber(Subscriber sub) {
         switch (sub.getDemand()) {
             case SUBS -> {
                 if (!subscribers.containsKey(sub.getID())) {
                     if (subscribers.size() < capacity.get()) {
                         subscribers.put(sub.getID(), sub);
                         System.out.println("Subscriber added: ID " + sub.getID());
-                    } else {
-                        ForwardToOtherServers(sub, port);
                     }
                 } else {
                     System.out.println("Already subscribed with ID: " + sub.getID());
@@ -126,26 +161,6 @@ public class ClientHandler {
                 }
             }
             default -> System.err.println("Invalid demand type.");
-        }
-    }
-
-    private static void ForwardToOtherServers(Subscriber sub, int clientPort) {
-        if (subscribers.size() >= capacity.get()) {
-            for (int port : SERVER_PORTS) {
-                if (port != clientPort) {
-                    try (Socket socket = new Socket(HOST, port);
-                         DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
-                        protobufHandler.sendProtobufMessage(output, sub);
-                        System.out.println("Subscriber forwarded to server on port: " + port);
-                        return; // Successfully forwarded, exit
-                    } catch (IOException e) {
-                        System.err.println("Failed to forward subscriber to server on port: " + port + " - " + e.getMessage());
-                    }
-                }
-            }
-            System.out.println("Failed to forward subscriber to any other server.");
-        } else {
-            System.out.println("Current server capacity is not full. No need to forward.");
         }
     }
 }
