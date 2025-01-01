@@ -3,12 +3,15 @@ package Clients;
 import java.io.IOException;
 
 public class Client3 {
-    private static final int PORT = 6003;
-    private static final int ID = 16;
+    private static final int ID = 14;
 
     public static void main(String[] args) {
         try {
-            ClientHandler.connectServer(PORT);
+            ClientHandler.connectServer();
+            if(ClientHandler.getOutput() == null){
+                System.err.println("Output stream is null, check connection.");
+                return;
+            }
             Thread.sleep(100);
             ClientHandler.sendRequest("SUBS", ID, ClientHandler.getOutput());
             Thread.sleep(100);

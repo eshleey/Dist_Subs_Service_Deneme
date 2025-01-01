@@ -37,6 +37,7 @@
     "Application.Client1.executor": "Run",
     "Application.Client2.executor": "Run",
     "Application.Client3.executor": "Run",
+    "Application.DistributedSystem.executor": "Run",
     "Application.Server.executor": "Run",
     "Application.Server1.executor": "Run",
     "Application.Server2.executor": "Run",
@@ -63,7 +64,7 @@
       <recent name="C:\Users\elifs\OneDrive\Masaüstü\Academic\Sistem Programlama\Project\src\main\java" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Client3">
+  <component name="RunManager" selected="Application.Client2">
     <configuration name="Client1" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Clients.Client1" />
       <module name="Odev" />
@@ -90,12 +91,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Client3" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="Clients.Client3" />
+    <configuration name="DistributedSystem" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="dist_servers.DistributedSystem" />
       <module name="Odev" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="Clients.*" />
+          <option name="PATTERN" value="dist_servers.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -178,9 +179,9 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Client3" />
         <item itemvalue="Application.Client2" />
         <item itemvalue="Application.Client1" />
+        <item itemvalue="Application.DistributedSystem" />
         <item itemvalue="Application.Server3" />
         <item itemvalue="Application.Server2" />
       </list>

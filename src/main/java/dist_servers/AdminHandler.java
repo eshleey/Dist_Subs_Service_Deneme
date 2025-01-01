@@ -17,14 +17,21 @@ import java.util.concurrent.*;
 import java.time.Instant;
 
 public class AdminHandler {
-    private int adminPort;
-    private static boolean isRunning = false;
+    private final int adminPort;
+    static boolean isRunning = false;
     private static final int THREAD_POOL_SIZE = 10;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-    private static final ProtobufHandler protobufHandler = new ProtobufHandler();
 
     public AdminHandler(int adminPort) {
         this.adminPort = adminPort;
+    }
+
+    public static boolean getIsRunning() {
+        return isRunning;
+    }
+
+    public void setIsRunning(boolean isRunning) {
+        AdminHandler.isRunning = isRunning;
     }
 
     public void startAdmin() {
@@ -87,20 +94,20 @@ public class AdminHandler {
         try (DataInputStream input = new DataInputStream(adminSocket.getInputStream());
              DataOutputStream output = new DataOutputStream(adminSocket.getOutputStream())) {
 
-            Configuration configuration = protobufHandler.receiveProtobufMessage(input, Configuration.class);
+            Configuration configuration = ProtobufHandler.receiveProtobufMessage(input, Configuration.class);
 
             if (configuration != null) {
                 System.out.println("Configuration from admin received: " + configuration.getMethod());
 
                 if (configuration.getMethod() == MethodType.STRT) {
-                    isRunning = true;
+                    setIsRunning(true);
 
                     Message response = Message.newBuilder()
                             .setDemand(Demand.STRT)
                             .setResponse(Response.YEP)
                             .build();
 
-                    protobufHandler.sendProtobufMessage(output, response);
+                    ProtobufHandler.sendProtobufMessage(output, response);
                     System.out.println("Message sent to admin: " + response.getResponse());
 
                     // diğer serverlara bağlanma kodları
@@ -116,7 +123,7 @@ public class AdminHandler {
 
             while (isRunning && !adminSocket.isClosed()) {
                 try {
-                    Message message = protobufHandler.receiveProtobufMessage(input, Message.class);
+                    Message message = ProtobufHandler.receiveProtobufMessage(input, Message.class);
                     if (message != null) {
                         System.out.println("Message from admin received: " + message.getDemand());
 
@@ -127,7 +134,7 @@ public class AdminHandler {
                                     .setTimestamp(timestamp)
                                     .build();
 
-                            protobufHandler.sendProtobufMessage(output, capacity);
+                            ProtobufHandler.sendProtobufMessage(output, capacity);
                             System.out.println("Capacity sent to admin: " + capacity);
                         } else {
                             System.out.println("Invalid Message type.");

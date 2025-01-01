@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class ProtobufHandler {
-    public <T extends MessageLite> void sendProtobufMessage(DataOutputStream output, T message) throws IOException {
+    public static <T extends MessageLite> void sendProtobufMessage(DataOutputStream output, T message) throws IOException {
         byte[] data = message.toByteArray();
         System.out.println("Data: " + Arrays.toString(data));
         byte[] lengthBytes = ByteBuffer.allocate(4).putInt(data.length).array();
@@ -20,7 +20,7 @@ public class ProtobufHandler {
         output.flush();
     }
 
-    public <T extends com.google.protobuf.MessageLite> T receiveProtobufMessage(DataInputStream input, Class<T> clazz) throws IOException {
+    public static <T extends com.google.protobuf.MessageLite> T receiveProtobufMessage(DataInputStream input, Class<T> clazz) throws IOException {
         try {
             byte[] lengthBytes = new byte[4];
             int bytesRead = input.read(lengthBytes);
@@ -42,7 +42,7 @@ public class ProtobufHandler {
         }
     }
 
-    private <T extends com.google.protobuf.MessageLite> T parseFrom(byte[] data, Class<T> clazz) throws IOException {
+    private static <T extends com.google.protobuf.MessageLite> T parseFrom(byte[] data, Class<T> clazz) throws IOException {
         try {
             java.lang.reflect.Method parseFromMethod = clazz.getMethod("parseFrom", byte[].class);
             return clazz.cast(parseFromMethod.invoke(null, (Object) data));

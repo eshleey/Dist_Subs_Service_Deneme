@@ -2,13 +2,15 @@ package Clients;
 
 import communication.ProtobufHandler;
 import communication.SubscriberOuterClass.Subscriber;
+import dist_servers.DistributedSystem;
+import dist_servers.ServerHandler;
 
 import java.util.Arrays;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
+import java.util.List;
 
 public class ClientHandler {
     private static final String SERVER_HOST = "localhost";
@@ -16,22 +18,25 @@ public class ClientHandler {
     private static DataOutputStream output;
     private static DataInputStream input;
 
-    private static final ProtobufHandler protobufHandler = new ProtobufHandler();
-
-    public static void connectServer(int port) throws IOException {
+    public static void connectServer() throws IOException {
         if (socket != null && !socket.isClosed()) {
             System.out.println("Already connected to a server.");
             return;
         }
-        try {
-            socket = new Socket(SERVER_HOST, port);
-            output = new DataOutputStream(socket.getOutputStream());
-            input = new DataInputStream(socket.getInputStream());
-            System.out.println("Connected to server: " + SERVER_HOST + ":" + port);
-        } catch (IOException ie) {
-            System.err.println("Connection error: " + ie.getMessage());
-            throw ie;
+        List<ServerHandler> servers = DistributedSystem.getServers();
+        for (ServerHandler server : servers) {
+            System.out.println("Trying to connect to: " + server.getPort());
+            try {
+                socket = new Socket(SERVER_HOST, server.getPort() + 1000);
+                output = new DataOutputStream(socket.getOutputStream());
+                input = new DataInputStream(socket.getInputStream());
+                System.out.println("Connected to server: " + SERVER_HOST + ":" + server.getPort() + 1000);
+                return;
+            } catch (IOException ie) {
+                System.err.println("Connection error: " + ie.getMessage() + " to " + server.getPort() + 1000);
+            }
         }
+        throw new IOException("Failed to connect to any server.");
     }
 
     public static void disconnectServer() {
@@ -64,12 +69,12 @@ public class ClientHandler {
         };
 
         System.out.println("Subscriber: " + subscriber);
-        protobufHandler.sendProtobufMessage(output, subscriber);
+        ProtobufHandler.sendProtobufMessage(output, subscriber);
         System.out.println("Request: " + request);
     }
 
     public static void receiveResponse(DataInputStream input) throws IOException {
-        Subscriber subscriber = protobufHandler.receiveProtobufMessage(input, Subscriber.class);
+        Subscriber subscriber = ProtobufHandler.receiveProtobufMessage(input, Subscriber.class);
         if (subscriber != null) {
             System.out.println("Response received: " + subscriber);
         } else {

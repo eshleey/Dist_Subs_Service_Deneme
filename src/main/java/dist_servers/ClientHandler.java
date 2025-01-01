@@ -14,8 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientHandler {
     private int clientPort;
-    private static final int[] SERVER_PORTS = {6001, 6002, 6003};
-    private static final String HOST = "localhost";
     private static final int THREAD_POOL_SIZE = 10;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final ConcurrentMap<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
