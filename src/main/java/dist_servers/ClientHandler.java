@@ -92,14 +92,18 @@ public class ClientHandler {
                     } else {
                         System.out.println("Subscriber Message: " + sub);
 
-                        /* Map<Integer, ClientHandler> clients = DistributedSystem.getClients();
+                        Map<Integer, ServerHandler> servers = DistributedSystem.getServersMap();
+                        Map<Integer, ClientHandler> clients = DistributedSystem.getClients();
 
                         for (int port : CLIENT_PORTS) {
                             if (port != clientPort) {
-                                DataOutputStream output = new DataOutputStream(clients.get(port).getClientSocket().getOutputStream());
+                                System.out.println("satır 100");
+                                DataOutputStream output = new DataOutputStream(servers.get(port).getClientSocket().getOutputStream());
+                                System.out.println("satır 102");
                                 ProtobufHandler.sendProtobufMessage(output, sub);
+                                System.out.println("satır 104");
                             }
-                        } */
+                        }
 
                         processSubscriber(sub);
                     }

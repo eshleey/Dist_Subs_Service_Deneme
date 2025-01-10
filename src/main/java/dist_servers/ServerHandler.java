@@ -23,6 +23,7 @@ public class ServerHandler {
     private ConcurrentMap<Integer, Subscriber> subscriberData = new ConcurrentHashMap<>();
     private List<Socket> connectedServers;
     private ServerSocket serverSocket;
+    private Socket clientSocket;
     private static final int CONNECTION_RETRY_INTERVAL = 5000; // 5 saniye
     private static final int THREAD_POOL_SIZE = 10;
     private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
@@ -34,6 +35,10 @@ public class ServerHandler {
         this.isPrimary = isPrimary;
         this.isAlive = true;
         this.connectedServers = new ArrayList<>();
+    }
+
+    public Socket getClientSocket() {
+        return clientSocket;
     }
 
     public int getId() {
@@ -95,7 +100,7 @@ public class ServerHandler {
     private void handleClientConnection() {
         while (true) {
             try {
-                Socket clientSocket = serverSocket.accept();
+                clientSocket = serverSocket.accept();
                 executorService.submit(() -> handleClientRequest(clientSocket));
             } catch (IOException e) {
                 e.printStackTrace();
