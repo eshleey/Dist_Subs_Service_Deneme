@@ -105,18 +105,18 @@ class Admin
       end
     end
     
-    if responses.values.all?
-      loop do
-        begin
-          check_capacity(sockets_with_ports, responses)
-          sleep(5)
-        rescue StandardError => e
-          puts "check_capacity: Kapasite sorgusunda hata oluştu: #{e.message}"
-          sockets_with_ports.each {|item| send_stop_command(item[:socket], item[:port])}
-          break
-        end
-      end
-    end
+    #if responses.values.all?
+    # loop do
+    #   begin
+    #     check_capacity(sockets_with_ports, responses)
+    #     sleep(5)
+    #   rescue StandardError => e
+    #     puts "check_capacity: Kapasite sorgusunda hata oluştu: #{e.message}"
+    #     sockets_with_ports.each {|item| send_stop_command(item[:socket], item[:port])}
+    #     break
+    #   end
+    # end
+    #end
  
     sockets_with_ports.each {|item| item[:socket].close}
   end

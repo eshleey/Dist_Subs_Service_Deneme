@@ -4,10 +4,11 @@ import java.io.IOException;
 
 public class Client3 {
     private static final int ID = 14;
+    private static final int clientPort = 6003;
 
     public static void main(String[] args) {
         try {
-            ClientHandler.connectServer();
+            ClientHandler.connectServer(clientPort);
             if(ClientHandler.getOutput() == null){
                 System.err.println("Output stream is null, check connection.");
                 return;

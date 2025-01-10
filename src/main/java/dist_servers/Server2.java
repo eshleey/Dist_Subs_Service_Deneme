@@ -18,6 +18,8 @@ public class Server2 {
         return serverHandler;
     }
 
+    public static ClientHandler getClientHandler() { return clientHandler; }
+
     public static void main(String[] args) {
         executorService.submit(serverHandler::startServer);
         executorService.submit(adminHandler::startAdmin);

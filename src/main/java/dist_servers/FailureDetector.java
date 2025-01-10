@@ -38,7 +38,7 @@ public class FailureDetector {
                 System.out.println("Server " + server.getId() + " is UP!");
             }
         }
-        checkPrimaryStatus();
+        // checkPrimaryStatus();
     }
 
     private boolean isServerReachable(int port) {
@@ -52,7 +52,7 @@ public class FailureDetector {
         }
     }
 
-    private void checkPrimaryStatus() {
+    /* private void checkPrimaryStatus() {
         ServerHandler primaryServer = null;
         for (ServerHandler server : servers) {
             if (server.getIsPrimary() && server.getIsAlive()) {
@@ -63,9 +63,9 @@ public class FailureDetector {
         if (primaryServer == null || !primaryServer.getIsAlive()) {
             electNewPrimary();
         }
-    }
+    } */
 
-    public void electNewPrimary() {
+    /* public void electNewPrimary() {
         System.out.println("Primary Server failed, starting new election");
         ServerHandler newPrimary = null;
         int lowestId = Integer.MAX_VALUE;
@@ -85,14 +85,14 @@ public class FailureDetector {
         } else {
             System.out.println("No server is available");
         }
-    }
+    } */
 
-    private void syncData(ServerHandler newPrimary) {
+    /* private void syncData(ServerHandler newPrimary) {
         for (ServerHandler server : servers) {
             if (!server.getIsPrimary()) {
                 server.setSubscriberData(newPrimary.getSubscriberData());
                 System.out.println("Data synchronized with server " + server.getId());
             }
         }
-    }
+    } */
 }

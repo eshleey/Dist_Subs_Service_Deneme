@@ -10,7 +10,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.List;
 
 public class ClientHandler {
     private static final String SERVER_HOST = "localhost";
@@ -18,25 +17,15 @@ public class ClientHandler {
     private static DataOutputStream output;
     private static DataInputStream input;
 
-    public static void connectServer() throws IOException {
-        if (socket != null && !socket.isClosed()) {
-            System.out.println("Already connected to a server.");
-            return;
+    public static void connectServer(int clientPort) throws IOException {
+        try {
+            socket = new Socket(SERVER_HOST, clientPort);
+            output = new DataOutputStream(socket.getOutputStream());
+            input = new DataInputStream(socket.getInputStream());
+            System.out.println("Connected to server: " + SERVER_HOST + ":" + clientPort);
+        } catch (IOException e) {
+            System.err.println("Connection error: " + e.getMessage() + " to " + clientPort);
         }
-        List<ServerHandler> servers = DistributedSystem.getServers();
-        for (ServerHandler server : servers) {
-            System.out.println("Trying to connect to: " + server.getPort());
-            try {
-                socket = new Socket(SERVER_HOST, server.getPort() + 1000);
-                output = new DataOutputStream(socket.getOutputStream());
-                input = new DataInputStream(socket.getInputStream());
-                System.out.println("Connected to server: " + SERVER_HOST + ":" + server.getPort() + 1000);
-                return;
-            } catch (IOException ie) {
-                System.err.println("Connection error: " + ie.getMessage() + " to " + server.getPort() + 1000);
-            }
-        }
-        throw new IOException("Failed to connect to any server.");
     }
 
     public static void disconnectServer() {

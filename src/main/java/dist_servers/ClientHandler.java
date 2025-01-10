@@ -4,24 +4,31 @@ import communication.ProtobufHandler;
 import communication.SubscriberOuterClass.Subscriber;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientHandler {
+    private static final int[] CLIENT_PORTS = {6001, 6002, 6003};
     private int clientPort;
     private static final int THREAD_POOL_SIZE = 10;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final ConcurrentMap<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
     private static final AtomicInteger capacity = new AtomicInteger(1000);
-    private static final ProtobufHandler protobufHandler = new ProtobufHandler();
+    private static Socket clientSocket = null;
 
     public ClientHandler(int clientPort) {
         this.clientPort = clientPort;
+    }
+
+    public Socket getClientSocket() {
+        return clientSocket;
     }
 
     public void startClient() {
@@ -62,7 +69,7 @@ public class ClientHandler {
                     System.err.println("Client server socket is closed. Stopping client connection attempts.");
                     break;
                 }
-                Socket clientSocket = clientServerSocket.accept();
+                clientSocket = clientServerSocket.accept();
                 System.out.println("Client connected: " + clientSocket.getInetAddress());
                 executorService.submit(() -> handleClient(clientSocket));
             } catch (SocketException e) {
@@ -78,12 +85,22 @@ public class ClientHandler {
         try (DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream())) {
             while (!clientSocket.isClosed()) {
                 try {
-                    Subscriber sub = protobufHandler.receiveProtobufMessage(inputStream, Subscriber.class);
+                    Subscriber sub = ProtobufHandler.receiveProtobufMessage(inputStream, Subscriber.class);
 
                     if (sub == null) {
                         System.err.println("Received null Subscriber message.");
                     } else {
                         System.out.println("Subscriber Message: " + sub);
+
+                        /* Map<Integer, ClientHandler> clients = DistributedSystem.getClients();
+
+                        for (int port : CLIENT_PORTS) {
+                            if (port != clientPort) {
+                                DataOutputStream output = new DataOutputStream(clients.get(port).getClientSocket().getOutputStream());
+                                ProtobufHandler.sendProtobufMessage(output, sub);
+                            }
+                        } */
+
                         processSubscriber(sub);
                     }
                 } catch (EOFException e) {
